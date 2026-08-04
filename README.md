@@ -1,5 +1,7 @@
 # iPhone Instagram / TikTok Account Warmer: Full Technique
 
+The full technique is below, give to your claude code to give it a big boost in the R&D being done on how to setup the warmer.
+
 A human-mimicking iOS warm-up driver. It drives **your own** iPhones over USB
 (via WebDriverAgent / XCUITest) to warm up **your own** Instagram & TikTok
 accounts on a day-by-day incubation ramp — behavior drawn from human-shaped
