@@ -45,7 +45,54 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # The notes are install instructions, not a changelog — someone
+          # arriving here wants to run the thing, not read commit subjects.
+          # Quoted heredoc: no expansion, so markdown backticks stay literal.
+          cat > notes.md <<'NOTES'
+          ## Download
+
+          1. Download **AutoWarmer-x.y.z.zip** at the bottom of this page.
+          2. Double-click it to unzip.
+          3. Open the unzipped **AutoWarmer** folder, **right-click `AutoWarmer.command`
+             and choose Open**, then confirm.
+
+          That third step matters: macOS blocks anything downloaded from the internet on a
+          plain double-click. Opening it this way once is all it takes — after that, a
+          normal double-click works.
+
+          AutoWarmer opens at `http://127.0.0.1:8790` and walks you through setup: it
+          finds the tools it needs (and installs the two it can), asks for your Apple
+          developer key so it can sign the small helper app onto your phone, then asks
+          which accounts live on which phone.
+
+          Prefer a terminal?
+
+          ```
+          cd AutoWarmer
+          python3 -m autowarmer
+          ```
+
+          ## What you need
+
+          - macOS with the full Xcode installed
+          - An iPhone you own, with Developer Mode on
+          - A paid Apple Developer membership (Apple only issues signing keys to paid
+            accounts — a free Apple ID cannot sign an app onto a phone)
+
+          ## Notes
+
+          Everything runs on your Mac. No account is created for you, nothing is
+          uploaded, and there is no server involved.
+
+          Use **Practice** the first time on any phone: it drives everything for real —
+          opens the app, confirms it is on the right account, scrolls a real feed — while
+          holding every like, follow and save.
+
+          Licensed under the [Business Source License 1.1](
+          https://github.com/Tej-Sharma/iphone-instagram-tiktok-account-warmer/blob/development/LICENSE):
+          use it on accounts and devices you own, including commercially.
+          NOTES
           gh release create "${GITHUB_REF_NAME}" \
             "dist/AutoWarmer-${{ steps.v.outputs.version }}.zip" \
             --title "AutoWarmer ${{ steps.v.outputs.version }}" \
-            --generate-notes
+            --notes-file notes.md
