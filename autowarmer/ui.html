@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AutoWarmer</title>
+<style>
+  :root{
+    --bg:#F2F4F7; --panel:#FFFFFF; --panel-2:#F7F8FB; --panel-3:#EDF0F4;
+    --line:#DDE2EA; --line-2:#E9ECF2;
+    --ink:#151A22; --ink-2:#4A5568; --ink-3:#79839A; --ink-4:#A3ABBD;
+    --accent:#B45A12; --accent-ink:#FFFFFF; --accent-soft:#FBEEE1;
+    --good:#1F7A55; --good-soft:#E4F2EB;
+    --warn:#9A6B10; --warn-soft:#F8EFDC;
+    --crit:#A83A2C; --crit-soft:#F8E6E3;
+    --radius:11px;
+    --shadow:0 1px 2px rgba(21,26,34,.05),0 10px 28px rgba(21,26,34,.07);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0D1117; --panel:#161B23; --panel-2:#1B212B; --panel-3:#222937;
+      --line:#28303C; --line-2:#212833;
+      --ink:#E8ECF3; --ink-2:#AEB8C9; --ink-3:#7E8899; --ink-4:#5B6577;
+      --accent:#F0A24A; --accent-ink:#1A1206; --accent-soft:#2C2013;
+      --good:#4FBE8B; --good-soft:#14261D;
+      --warn:#E0A53A; --warn-soft:#2A2312;
+      --crit:#E8776A; --crit-soft:#2C1714;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F2F4F7; --panel:#FFFFFF; --panel-2:#F7F8FB; --panel-3:#EDF0F4;
+    --line:#DDE2EA; --line-2:#E9ECF2;
+    --ink:#151A22; --ink-2:#4A5568; --ink-3:#79839A; --ink-4:#A3ABBD;
+    --accent:#B45A12; --accent-ink:#FFFFFF; --accent-soft:#FBEEE1;
+    --good:#1F7A55; --good-soft:#E4F2EB; --warn:#9A6B10; --warn-soft:#F8EFDC;
+    --crit:#A83A2C; --crit-soft:#F8E6E3;
+    --shadow:0 1px 2px rgba(21,26,34,.05),0 10px 28px rgba(21,26,34,.07);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0D1117; --panel:#161B23; --panel-2:#1B212B; --panel-3:#222937;
+    --line:#28303C; --line-2:#212833;
+    --ink:#E8ECF3; --ink-2:#AEB8C9; --ink-3:#7E8899; --ink-4:#5B6577;
+    --accent:#F0A24A; --accent-ink:#1A1206; --accent-soft:#2C2013;
+    --good:#4FBE8B; --good-soft:#14261D; --warn:#E0A53A; --warn-soft:#2A2312;
+    --crit:#E8776A; --crit-soft:#2C1714;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+    font:14.5px/1.55 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;padding-bottom:60px}
+  .mono,code,input.mono{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace}
+  a{color:var(--accent)}
+
+  /* ---- chrome ---- */
+  .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+    padding:12px 22px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:750;letter-spacing:-.02em;font-size:16px}
+  .flame{width:26px;height:26px;border-radius:8px;background:var(--accent);
+    display:grid;place-items:center;color:var(--accent-ink);font-size:14px;font-weight:800}
+  .ver{font-size:11.5px;color:var(--ink-4)}
+  .sp{flex:1}
+  .wrap{max-width:1000px;margin:0 auto;padding:22px}
+
+  button,.btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 13px;
+    cursor:pointer;white-space:nowrap}
+  button:hover{border-color:var(--ink-3)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  button.primary:hover{filter:brightness(1.07)}
+  button.ghost{background:transparent}
+  button.danger{color:var(--crit);border-color:var(--crit)}
+  button[disabled]{opacity:.45;cursor:not-allowed}
+  button.sm{padding:5px 10px;font-size:12px}
+
+  input,select,textarea{font:inherit;font-size:13.5px;background:var(--panel-2);
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 11px;width:100%}
+  input::placeholder{color:var(--ink-4)}
+  label.f{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin:0 0 5px}
+  .hint{font-size:12px;color:var(--ink-3);margin-top:5px;line-height:1.5}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+  .card-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+  .card-h h2{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+  .card-b{padding:16px 18px}
+  .lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:650}
+
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap;
+    letter-spacing:.02em}
+  .pill.ok{background:var(--good-soft);color:var(--good)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.bad{background:var(--crit-soft);color:var(--crit)}
+  .pill.idle{background:var(--panel-3);color:var(--ink-3)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+
+  /* ---- wizard ---- */
+  .steps{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-3);
+    background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:6px 13px}
+  .step b{width:19px;height:19px;border-radius:50%;background:var(--panel-3);color:var(--ink-3);
+    display:grid;place-items:center;font-size:11px}
+  .step.on{color:var(--ink);border-color:var(--accent)}
+  .step.on b{background:var(--accent);color:var(--accent-ink)}
+  .step.done b{background:var(--good);color:#fff}
+  .lead{font-size:15px;color:var(--ink-2);margin-bottom:18px;max-width:62ch}
+  h1{font-size:24px;font-weight:750;letter-spacing:-.02em;margin-bottom:8px}
+
+  .toolrow{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:start;
+    padding:13px 0;border-bottom:1px solid var(--line-2)}
+  .toolrow:last-child{border-bottom:0}
+  .toolname{font-weight:650;font-size:13.5px;padding-top:8px}
+  .rowactions{display:flex;gap:7px;align-items:center;padding-top:5px}
+  pre.hintbox{background:var(--panel-3);border-radius:7px;padding:9px 11px;font-size:12px;
+    color:var(--ink-2);white-space:pre-wrap;margin-top:7px;font-family:ui-monospace,Menlo,monospace}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:660px){.grid2{grid-template-columns:1fr}.toolrow{grid-template-columns:1fr}}
+
+  .phone{border:1px solid var(--line);border-radius:9px;padding:13px 15px;margin-bottom:11px;
+    background:var(--panel-2)}
+  .phone-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .phone-h .nm{font-weight:700}
+  .meta{font-size:12px;color:var(--ink-3)}
+
+  .acct{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);
+    flex-wrap:wrap}
+  .acct:last-child{border-bottom:0}
+  .plat{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+    font-size:11px;font-weight:800;color:#fff;flex:none}
+  .plat.ig{background:linear-gradient(135deg,#F09433,#DC2743,#BC1888)}
+  .plat.tt{background:#111;color:#fff}
+  :root[data-theme="dark"] .plat.tt{background:#2A2A2A}
+  .handle{font-weight:650}
+  .rates{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+  .log{background:#0B0E14;color:#C9D3E4;border-radius:9px;padding:13px 15px;
+    font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;
+    max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+  :root[data-theme="light"] .log{background:#12161F}
+  .log .l-ok{color:#7EE2B8}.log .l-bad{color:#FF9A8B}.log .l-dim{color:#7E8899}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-3);font-weight:650;padding:9px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid var(--line-2);color:var(--ink-2);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .tw{overflow-x:auto}
+
+  .banner{display:flex;gap:11px;align-items:flex-start;padding:12px 15px;border-radius:9px;
+    font-size:13px;margin-bottom:14px;line-height:1.5}
+  .banner.warn{background:var(--warn-soft);color:var(--warn)}
+  .banner.bad{background:var(--crit-soft);color:var(--crit)}
+  .banner ul{margin:5px 0 0 16px}
+  .empty{color:var(--ink-3);font-size:13px;padding:14px 0;text-align:center}
+  .rowbtns{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <span class="logo"><span class="flame">A</span>AutoWarmer</span>
+  <span class="ver" id="ver"></span>
+  <span class="sp"></span>
+  <button class="ghost sm" onclick="toggleTheme()" title="Light or dark">◐</button>
+  <button class="ghost sm" id="settingsBtn" onclick="openSettings()" style="display:none">Setup</button>
+</div>
+
+<div class="wrap" id="root"><div class="empty">Loading…</div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let ST={},W=null,STEP=0,POLL=null,LOGJOB=null,LOGSINCE=0,LOGBUF=[];
+
+function toggleTheme(){const r=document.documentElement;
+  const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const nxt=cur==='dark'?'light':'dark';r.setAttribute('data-theme',nxt);
+  try{localStorage.setItem('aw_theme',nxt)}catch(e){}}
+try{const t=localStorage.getItem('aw_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}
+
+async function api(path,opts){const r=await fetch(path,opts);let b=null;
+  try{b=await r.json()}catch(e){}
+  return {ok:r.ok,status:r.status,body:b||{}};}
+async function post(path,obj){return api(path,{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify(obj||{})});}
+
+/* ============================ load ============================ */
+async function load(){
+  const r=await api('/api/state');
+  if(!r.ok){$('#root').innerHTML='<div class="empty">AutoWarmer stopped responding. Restart it in the terminal.</div>';return;}
+  ST=r.body;
+  $('#ver').textContent=ST.version?('v'+ST.version):'';
+  $('#settingsBtn').style.display=ST.configured?'inline-block':'none';
+  if(W){renderWizard();return;}                  /* editing setup: don't clobber inputs */
+  if(!ST.configured){startWizard(ST.detected||[]);return;}
+  renderDash();
+}
+function startPolling(){if(POLL)clearInterval(POLL);POLL=setInterval(()=>{if(!W)load()},4000);}
+
+/* ============================ wizard ============================ */
+function startWizard(detected,editing){
+  const cfg=ST.config||{};
+  const byName={};(detected||[]).forEach(d=>byName[d.name]=d);
+  W={
+    detected:detected||[],
+    binaries:{
+      xcode:cfg.developer_dir||(byName.xcode||{}).path||'',
+      ios:cfg.ios_binary||(byName.ios||{}).path||'',
+      iproxy:cfg.iproxy_binary||(byName.iproxy||{}).path||'',
+      pymobiledevice3:cfg.pymobiledevice3_binary||(byName.pymobiledevice3||{}).path||''},
+    signing:Object.assign({p8_path:'',key_id:'',issuer_id:'',team_id:''},cfg.signing||{}),
+    devices:JSON.parse(JSON.stringify(cfg.devices||[])),
+    editing:!!editing, saveErr:null, found:[]};
+  STEP=0;renderWizard();
+}
+function openSettings(){startWizard(ST.detected||[],true);
+  api('/api/detect').then(r=>{if(W){W.detected=r.body.detected||[];renderWizard()}});}
+
+const STEPS=['Tools','Apple','Phones','Accounts'];
+function renderWizard(){
+  const s=['<div class="steps">',...STEPS.map((n,i)=>
+    `<span class="step ${i===STEP?'on':''} ${i<STEP?'done':''}"><b>${i<STEP?'✓':i+1}</b>${n}</span>`),'</div>'].join('');
+  $('#root').innerHTML=s+[wTools,wApple,wPhones,wAccounts][STEP]();
+}
+function wNav(back,next,nextLabel,ok){
+  return `<div style="display:flex;gap:9px;margin-top:18px;align-items:center">
+    ${back?`<button onclick="STEP--;renderWizard()">Back</button>`:''}
+    ${W.editing?`<button class="ghost" onclick="W=null;load()">Cancel</button>`:''}
+    <span class="sp" style="flex:1"></span>
+    ${next?`<button class="primary" ${ok?'':'disabled'} onclick="${next}">${nextLabel||'Continue'}</button>`:''}
+  </div>`;
+}
+
+/* ---- step 1: tools ---- */
+function wTools(){
+  const busy=W.installing;
+  const rows=W.detected.map(d=>{
+    const v=W.binaries[d.name]||'';
+    const state=d.found?'<span class="pill ok">found</span>':'<span class="pill bad">missing</span>';
+    const canInstall=d.installable&&!d.found;
+    return `<div class="toolrow">
+      <div class="toolname">${esc(d.label)}
+        <div class="meta">${esc(d.why||'')}</div></div>
+      <div>
+        <input class="mono" value="${esc(v)}" placeholder="path to ${esc(d.label)}"
+               oninput="W.binaries['${d.name}']=this.value"
+               onchange="checkPath('${d.name}',this.value)">
+        <div id="chk-${d.name}" class="hint"></div>
+        ${d.found?'':`<pre class="hintbox">${esc(d.hint)}</pre>`}
+      </div>
+      <div class="rowactions" style="flex-direction:column;align-items:flex-end;gap:6px">
+        ${state}
+        ${canInstall?`<button class="sm primary" ${busy?'disabled':''}
+          onclick="installTool('${d.name}')">Install for me</button>`:''}
+      </div>
+    </div>`;}).join('');
+  const missing=W.detected.filter(d=>!d.found);
+  const auto=missing.filter(d=>d.installable);
+  const manual=missing.filter(d=>!d.installable);
+  const banner=missing.length?`<div class="banner ${manual.length?'warn':'warn'}">
+      <div><b>${missing.length} missing.</b>
+      ${auto.length?`AutoWarmer can fetch ${auto.map(d=>esc(d.label)).join(' and ')} for you.`:''}
+      ${manual.length?`${manual.map(d=>esc(d.label)).join(' and ')} must be installed by you — see below.`:''}
+      </div></div>`
+    :'<div class="banner" style="background:var(--good-soft);color:var(--good)"><div><b>Everything is here.</b> You can continue.</div></div>';
+  const logbox=W.installLog?`<div class="card"><div class="card-h"><h2>Installing…</h2>
+      <span class="sp" style="flex:1"></span>${busy?'<span class="pill warn">working</span>':'<span class="pill ok">done</span>'}
+      </div><div class="card-b"><div class="log" id="ilog">${W.installLog.map(fmtLine).join('\n')}</div></div></div>`:'';
+  return `<h1>What AutoWarmer needs on this Mac</h1>
+    <p class="lead">Four things let a Mac drive an iPhone over USB. AutoWarmer found what it could.
+      The two it can fetch itself have an <b>Install for me</b> button — they go into AutoWarmer's own
+      folder, so nothing else on your Mac is touched.</p>
+    ${banner}
+    <div class="card"><div class="card-b">${rows}
+      <div style="display:flex;gap:9px;margin-top:14px">
+        <button ${busy?'disabled':''} onclick="recheck()">Re-check</button>
+        ${auto.length>1?`<button class="primary" ${busy?'disabled':''} onclick="installTool('all')">Install everything missing</button>`:''}
+      </div></div></div>
+    ${logbox}
+    ${wNav(false,'STEP=1;renderWizard()','Continue',true)}
+    <p class="hint">You can continue with something missing — AutoWarmer will tell you again when it
+      actually needs it.</p>`;
+}
+async function installTool(name){
+  W.installing=true;W.installLog=['starting…'];renderWizard();
+  const r=await post('/api/run',{kind:'install',tool:name});
+  if(!r.ok){W.installing=false;W.installLog=[r.body.error||'could not start'];renderWizard();return;}
+  const id=r.body.id;let since=0;
+  const step=async()=>{
+    const j=await api(`/api/job?id=${encodeURIComponent(id)}&since=${since}`);
+    if(j.ok&&j.body.lines){
+      if(j.body.lines.length){W.installLog=W.installLog.concat(j.body.lines);
+        since=j.body.from+j.body.lines.length;
+        const el=$('#ilog');if(el){el.innerHTML=W.installLog.map(fmtLine).join('\n');el.scrollTop=el.scrollHeight;}}
+      if(j.body.status==='running'){setTimeout(step,900);return;}
+    }
+    W.installing=false;
+    await recheck();                       /* picks up the new paths */
+  };
+  step();
+}
+async function recheck(){const r=await api('/api/detect');W.detected=r.body.detected||[];
+  (W.detected).forEach(d=>{if(d.found&&!W.binaries[d.name])W.binaries[d.name]=d.path});renderWizard();}
+async function checkPath(name,path){if(!path)return;
+  const r=await post('/api/check-path',{name,path});const el=$('#chk-'+name);if(!el)return;
+  el.innerHTML=r.body.ok?'<span style="color:var(--good)">✓ looks good</span>'
+    :`<span style="color:var(--crit)">${esc(r.body.why||'not usable')}</span>`;}
+
+/* ---- step 2: apple ---- */
+function wApple(){
+  const g=W.signing;
+  return `<h1>Your Apple developer identity</h1>
+    <p class="lead">Driving an iPhone needs a small helper app installed on it, and Apple requires
+      that app to be signed by the phone's owner. An App Store Connect API key lets AutoWarmer do
+      that build for you, without opening Xcode. It never leaves this Mac and is only ever used to
+      sign your own phones.</p>
+    <div class="card"><div class="card-h"><h2>How to get the key — about 3 minutes</h2></div>
+      <div class="card-b" style="font-size:13.5px;color:var(--ink-2);line-height:1.7">
+        <div>1. Sign in at <b>appstoreconnect.apple.com</b> with the Apple ID that has a paid
+          Apple&nbsp;Developer membership. <span style="color:var(--ink-3)">(A free Apple ID cannot
+          create these keys.)</span></div>
+        <div>2. <b>Users and Access</b> → <b>Integrations</b> → <b>App Store Connect API</b> → the
+          <b>+</b> button.</div>
+        <div>3. Name it anything (&ldquo;AutoWarmer&rdquo;), set Access to <b>App Manager</b>, and
+          press Generate.</div>
+        <div>4. <b>Download the .p8 file — Apple only offers it once.</b> Copy the <b>Key ID</b>
+          beside it and the <b>Issuer ID</b> from the top of that page.</div>
+        <div>5. Your <b>Team ID</b> is at developer.apple.com → Account → <b>Membership details</b>.</div>
+      </div></div>
+    <div class="card"><div class="card-b">
+      <div class="grid2">
+        <div style="grid-column:1/-1">
+          <label class="f">API key file (.p8)</label>
+          <input class="mono" value="${esc(g.p8_path)}" placeholder="~/Downloads/AuthKey_XXXXXXXXXX.p8"
+                 oninput="W.signing.p8_path=this.value">
+          <div class="hint">Drag the downloaded file into a Finder window and copy its path, or type it.
+            AutoWarmer keeps its own private copy in <code>~/.autowarmer/keys</code> (readable only by
+            you), so cleaning out Downloads later won't break your builds.</div>
+        </div>
+        <div><label class="f">Key ID</label>
+          <input class="mono" value="${esc(g.key_id)}" placeholder="XXXXXXXXXX"
+                 oninput="W.signing.key_id=this.value">
+          <div class="hint">Shown beside the key you just made.</div></div>
+        <div><label class="f">Issuer ID</label>
+          <input class="mono" value="${esc(g.issuer_id)}" placeholder="00000000-0000-0000-0000-000000000000"
+                 oninput="W.signing.issuer_id=this.value">
+          <div class="hint">At the top of the same Keys page.</div></div>
+        <div><label class="f">Team ID</label>
+          <input class="mono" value="${esc(g.team_id)}" placeholder="ABCDE12345"
+                 oninput="W.signing.team_id=this.value">
+          <div class="hint">developer.apple.com → Membership details.</div></div>
+      </div>
+    </div></div>
+    ${wNav(true,'STEP=2;renderWizard();findPhones()','Continue',true)}`;
+}
+
+/* ---- step 3: phones ---- */
+function wPhones(){
+  const found=W.found||[];
+  const known=new Set(W.devices.map(d=>d.udid));
+  const avail=found.filter(f=>!known.has(f.udid));
+  const mine=W.devices.map((d,i)=>{
+    const live=found.find(f=>f.udid===d.udid);
+    return `<div class="phone"><div class="phone-h">
+      <span class="dot" style="background:${live?'var(--good)':'var(--ink-4)'}"></span>
+      <input style="max-width:190px" value="${esc(d.name||'')}" placeholder="name this phone"
+             oninput="W.devices[${i}].name=this.value">
+      <span class="meta mono">…${esc((d.udid||'').slice(-8))}</span>
+      <span class="meta">${live?esc((live.name||'')+' · iOS '+(live.ios||'')):'not plugged in'}</span>
+      <span class="sp" style="flex:1"></span>
+      <button class="sm danger" onclick="W.devices.splice(${i},1);renderWizard()">Remove</button>
+    </div></div>`;}).join('')||'<div class="empty">No phones added yet.</div>';
+  const list=avail.map(f=>`<div class="phone"><div class="phone-h">
+      <span class="dot" style="background:var(--good)"></span>
+      <span class="nm">${esc(f.name||'iPhone')}</span>
+      <span class="meta">iOS ${esc(f.ios||'?')}</span>
+      <span class="meta mono">…${esc(f.udid.slice(-8))}</span>
+      <span class="sp" style="flex:1"></span>
+      <button class="sm primary" onclick="addPhone('${f.udid}')">Add</button>
+    </div></div>`).join('');
+  return `<h1>Your iPhones</h1>
+    <p class="lead">Plug each phone in over USB, unlock it, and tap <b>Trust This Computer</b>.
+      Phones AutoWarmer can see appear below.</p>
+    <div class="card"><div class="card-h"><h2>Added</h2></div><div class="card-b">${mine}</div></div>
+    <div class="card"><div class="card-h"><h2>Detected</h2><span class="sp" style="flex:1"></span>
+      <button class="sm" onclick="findPhones()">Scan again</button></div>
+      <div class="card-b">${list||'<div class="empty">Nothing new plugged in.</div>'}</div></div>
+    ${wNav(true,'STEP=3;renderWizard()','Continue',W.devices.length>0)}`;
+}
+async function findPhones(){
+  const r=await api('/api/devices?ios='+encodeURIComponent(W.binaries.ios||''));
+  W.found=r.body.devices||[];renderWizard();}
+function addPhone(udid){
+  const f=(W.found||[]).find(x=>x.udid===udid)||{};
+  W.devices.push({udid,name:f.name||('iphone-'+(W.devices.length+1)),accounts:[]});
+  renderWizard();}
+
+/* ---- step 4: accounts ---- */
+function wAccounts(){
+  const today=new Date().toISOString().slice(0,10);
+  const blocks=W.devices.map((d,di)=>{
+    const rows=(d.accounts||[]).map((a,ai)=>`
+      <div class="acct">
+        <span class="plat ${a.platform==='tiktok'?'tt':'ig'}">${a.platform==='tiktok'?'T':'I'}</span>
+        <select style="width:112px" onchange="W.devices[${di}].accounts[${ai}].platform=this.value;renderWizard()">
+          <option value="instagram" ${a.platform!=='tiktok'?'selected':''}>Instagram</option>
+          <option value="tiktok" ${a.platform==='tiktok'?'selected':''}>TikTok</option></select>
+        <input style="width:170px" value="${esc(a.username||'')}" placeholder="username"
+               oninput="W.devices[${di}].accounts[${ai}].username=this.value">
+        <input style="width:150px" type="date" value="${esc(a.created_at||'')}"
+               oninput="W.devices[${di}].accounts[${ai}].created_at=this.value" title="date the account was created">
+        <input style="flex:1;min-width:160px" value="${esc((a.keywords||[]).join(', '))}"
+               placeholder="interests, comma separated"
+               oninput="W.devices[${di}].accounts[${ai}].keywords=this.value.split(',').map(s=>s.trim()).filter(Boolean)">
+        <button class="sm danger" onclick="W.devices[${di}].accounts.splice(${ai},1);renderWizard()">✕</button>
+      </div>`).join('')||'<div class="empty">No accounts on this phone yet.</div>';
+    return `<div class="card"><div class="card-h"><h2>${esc(d.name||d.udid.slice(-8))}</h2>
+        <span class="meta mono">…${esc((d.udid||'').slice(-8))}</span>
+        <span class="sp" style="flex:1"></span>
+        <button class="sm" onclick="W.devices[${di}].accounts.push({platform:'instagram',username:'',created_at:'${today}',keywords:[]});renderWizard()">Add account</button>
+      </div><div class="card-b">${rows}</div></div>`;}).join('');
+  const err=W.saveErr?`<div class="banner bad"><div><b>Not saved yet</b><ul>${
+    W.saveErr.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div></div>`:'';
+  return `<h1>Which accounts live on each phone</h1>
+    <p class="lead">Add the accounts already signed in on each phone. The creation date matters most:
+      the whole warm-up ramp is measured from it, so a brand-new account starts gently and an older
+      one picks up where it should.</p>
+    ${err}${blocks}
+    ${wNav(true,'saveConfig()',W.editing?'Save changes':'Finish setup',true)}`;
+}
+async function saveConfig(){
+  const r=await post('/api/config',{binaries:W.binaries,signing:W.signing,devices:W.devices});
+  if(!r.ok){W.saveErr=r.body.problems||[r.body.error||'could not save'];renderWizard();
+    window.scrollTo({top:0,behavior:'smooth'});return;}
+  W=null;await load();startPolling();
+}
+
+/* ============================ dashboard ============================ */
+function renderDash(){
+  const devs=ST.devices||[],accts=ST.accounts||[],active=ST.active;
+  const problems=(ST.problems||[]);
+  const probBanner=problems.length?`<div class="banner warn"><div>
+      <b>Setup needs attention</b><ul>${problems.slice(0,6).map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
+      <button class="sm" style="margin-top:8px" onclick="openSettings()">Open setup</button></div></div>`:'';
+
+  const running=!!(active&&active.status==='running');
+  const bar=`<div class="card"><div class="card-b" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="primary" ${running?'disabled':''} onclick="run({kind:'warm-all'})">Warm every phone</button>
+      <button ${running?'disabled':''} onclick="run({kind:'warm-all',practice:true})">Practice run</button>
+      <button class="ghost" ${running?'disabled':''} onclick="run({kind:'doctor'})">Check setup</button>
+      <span class="sp" style="flex:1"></span>
+      ${running?`<span class="pill warn">running · ${esc(active.kind)} ${esc(active.label)}</span>
+        <button class="danger sm" onclick="stopJob()">Stop</button>`
+        :'<span class="pill idle">idle</span>'}
+    </div></div>`;
+
+  const phones=devs.map(d=>{
+    const st=d.connected
+      ? (d.runner_installed===false?'<span class="pill warn">runner not installed</span>'
+         :d.runner_installed===null?'<span class="pill idle">connected</span>'
+         :'<span class="pill ok">ready</span>')
+      : '<span class="pill bad">not plugged in</span>';
+    const rows=(d.accounts||[]).map(a=>{
+      const s=accts.find(x=>x.username===a.username&&x.platform===a.platform)||{};
+      const day=s.day!=null?`day ${s.day}`:'';
+      const phase=s.phase?esc(s.phase):'';
+      const rates=s.like_rate!=null
+        ? `like ${Math.round(s.like_rate*100)}% · follow ${Math.round(s.follow_rate*100)}% · ${s.sessions_per_day}×/day`:'';
+      return `<div class="acct">
+        <span class="plat ${a.platform==='tiktok'?'tt':'ig'}">${a.platform==='tiktok'?'T':'I'}</span>
+        <span class="handle">@${esc(a.username)}</span>
+        <span class="meta">${day}${phase?' · '+phase:''}</span>
+        <span class="rates">${rates}</span>
+        <span class="rowbtns">
+          <button class="sm" ${running||!d.connected?'disabled':''}
+            onclick="run({kind:'plan',handle:'${esc(a.username)}',platform:'${a.platform}'})">Preview</button>
+          <button class="sm" ${running||!d.connected?'disabled':''}
+            onclick="run({kind:'practice',handle:'${esc(a.username)}',platform:'${a.platform}'})">Practice</button>
+          <button class="sm primary" ${running||!d.connected?'disabled':''}
+            onclick="run({kind:'warm',handle:'${esc(a.username)}',platform:'${a.platform}'})">Warm now</button>
+        </span></div>`;}).join('')||'<div class="empty">No accounts on this phone.</div>';
+    return `<div class="card"><div class="card-h">
+        <span class="dot" style="background:${d.connected?'var(--good)':'var(--ink-4)'}"></span>
+        <h2>${esc(d.name)}</h2>
+        <span class="meta">${esc([d.device_name,d.ios&&('iOS '+d.ios)].filter(Boolean).join(' · '))}</span>
+        <span class="sp" style="flex:1"></span>${st}
+        ${d.connected&&d.runner_installed!==true?
+          `<button class="sm" ${running?'disabled':''} onclick="run({kind:'onboard',udid:'${esc(d.udid)}'})">Install runner</button>`:''}
+      </div><div class="card-b">${rows}</div></div>`;}).join('');
+
+  const logCard=(LOGJOB||running)?`<div class="card"><div class="card-h"><h2>Live output</h2>
+      <span class="sp" style="flex:1"></span>
+      ${running?`<button class="danger sm" onclick="stopJob()">Stop</button>`:''}
+      </div><div class="card-b"><div class="log" id="log">${LOGBUF.map(fmtLine).join('\n')||'…'}</div></div></div>`:'';
+
+  const runs=(ST.runs||[]);
+  const hist=runs.length?`<div class="tw"><table>
+      <tr><th>When</th><th>Account</th><th>Result</th><th>Length</th><th>Activity</th></tr>
+      ${runs.slice(0,12).map(r=>{
+        const cls=r.outcome==='complete'?'ok':(r.outcome==='aborted'?'bad':'idle');
+        const c=r.counts||{};
+        return `<tr><td class="mono">${esc((r.when||'').slice(0,16).replace('T',' '))}</td>
+          <td>@${esc(r.account)}</td>
+          <td><span class="pill ${cls}">${esc(r.outcome)}</span></td>
+          <td>${r.duration_s?Math.round(r.duration_s)+'s':'—'}</td>
+          <td class="meta">${esc(Object.entries(c).map(([k,v])=>v+' '+k).join(' · ')||'—')}</td></tr>`;
+      }).join('')}</table></div>`:'<div class="empty">No warm-ups yet — run one above.</div>';
+
+  $('#root').innerHTML=probBanner+bar+phones+logCard+
+    `<div class="card"><div class="card-h"><h2>Recent warm-ups</h2></div><div class="card-b">${hist}</div></div>`;
+  if(LOGJOB)scrollLog();
+}
+function fmtLine(l){
+  const t=esc(l);
+  if(/\b(fail|error|aborted|could not|missing)\b/i.test(l))return `<span class="l-bad">${t}</span>`;
+  if(/\b(ok|complete|succeeded|ready|installed|posted)\b/i.test(l))return `<span class="l-ok">${t}</span>`;
+  return t;}
+function scrollLog(){const el=$('#log');if(el)el.scrollTop=el.scrollHeight;}
+
+async function run(opts){
+  const r=await post('/api/run',opts);
+  if(!r.ok){alert(r.body.error||'could not start');return;}
+  LOGJOB=r.body.id;LOGSINCE=0;LOGBUF=[];
+  await load();pumpLog();
+}
+async function stopJob(){await post('/api/stop',{id:LOGJOB});setTimeout(load,600);}
+async function pumpLog(){
+  if(!LOGJOB)return;
+  const r=await api(`/api/job?id=${encodeURIComponent(LOGJOB)}&since=${LOGSINCE}`);
+  if(r.ok&&r.body.lines){
+    if(r.body.lines.length){LOGBUF=LOGBUF.concat(r.body.lines);LOGSINCE=r.body.from+r.body.lines.length;
+      const el=$('#log');if(el){el.innerHTML=LOGBUF.map(fmtLine).join('\n');scrollLog();}}
+    if(r.body.status==='running'){setTimeout(pumpLog,1000);return;}
+    load();
+  }
+}
+load().then(startPolling);
+</script>
+</body>
+</html>

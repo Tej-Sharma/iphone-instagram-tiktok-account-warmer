@@ -1,0 +1,51 @@
+name: Release
+
+# Tag a commit and the zip builds itself:
+#     git tag v1.0.0 && git push origin v1.0.0
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build (no leading v)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the version
+        id: v
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the test suite
+        run: python3 tests/test_autowarmer.py
+
+      - name: Build the download
+        run: python3 tools/make_zip.py "${{ steps.v.outputs.version }}"
+
+      - name: Check the zip actually runs
+        run: |
+          cd dist && unzip -q "AutoWarmer-${{ steps.v.outputs.version }}.zip"
+          cd "AutoWarmer-${{ steps.v.outputs.version }}" && python3 -m autowarmer doctor
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "dist/AutoWarmer-${{ steps.v.outputs.version }}.zip" \
+            --title "AutoWarmer ${{ steps.v.outputs.version }}" \
+            --generate-notes

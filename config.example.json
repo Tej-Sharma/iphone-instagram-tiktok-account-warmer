@@ -1,0 +1,35 @@
+{
+  "ios_binary": "bin/ios",
+  "pymobiledevice3_binary": "~/Library/Python/3.9/bin/pymobiledevice3",
+  "developer_dir": "/Applications/Xcode.app/Contents/Developer",
+  "wda_host_port": 8100,
+  "trace_level": "errors",
+  "signing": {
+    "p8_path": "~/.autowarmer/keys/AuthKey_XXXXXXXXXX.p8",
+    "key_id": "XXXXXXXXXX",
+    "issuer_id": "00000000-0000-0000-0000-000000000000",
+    "team_id": "YOURTEAMID"
+  },
+  "devices": [
+    {
+      "udid": "PUT-YOUR-DEVICE-UDID-HERE",
+      "name": "iphone-1",
+      "wda_bundle_id": "com.yourteamid.autowarmer.wda.xctrunner",
+      "screen_points": [375, 667],
+      "accounts": [
+        {
+          "platform": "instagram",
+          "username": "your_ig_handle",
+          "created_at": "2026-08-01",
+          "keywords": ["your niche", "another interest"]
+        },
+        {
+          "platform": "tiktok",
+          "username": "your_tt_handle",
+          "created_at": "2026-08-01",
+          "keywords": ["your niche"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,89 +1,88 @@
-# iPhone Instagram / TikTok Account Warmer: Full Technique
+# AutoWarmer
 
-The full technique is below, give to your claude code to give it a big boost in the R&D being done on how to setup the warmer.
+Warm up **your own** Instagram and TikTok accounts on **your own** iPhone.
 
-A human-mimicking iOS warm-up driver. It drives **your own** iPhones over USB
-(via WebDriverAgent / XCUITest) to warm up **your own** Instagram & TikTok
-accounts on a day-by-day incubation ramp — behavior drawn from human-shaped
-distributions rather than fixed quotas. Built for legitimate creators and account
-managers running self-publishing at scale. **Not** a spam farm.
+AutoWarmer drives a real iPhone over USB and behaves like a person using it:
+it opens the app, checks it is on the right account, watches a feed, and
+occasionally likes, saves or follows. Every account follows a day-by-day ramp
+measured from the date it was created, so a fresh account browses quietly and
+an older one does more.
 
----
+Everything runs on your Mac. No account is created for you, nothing is
+uploaded, and there is no server involved.
+
+## Download
+
+Grab the latest **AutoWarmer-x.y.z.zip** from
+[Releases](https://github.com/Tej-Sharma/iphone-instagram-tiktok-account-warmer/releases/latest), unzip it, then **right-click
+`AutoWarmer.command` and choose Open** the first time (macOS blocks anything
+downloaded from the internet on a plain double-click).
+
+Or run it from a clone:
+
+```bash
+python3 -m autowarmer
+```
+
+The dashboard opens at `http://127.0.0.1:8790`.
+
+## What you need
+
+| Thing | What it does | Who installs it |
+|---|---|---|
+| macOS + full Xcode | builds the helper app that drives your phone | you, from the App Store |
+| git | fetches that helper app's source | you, `xcode-select --install` |
+| go-ios | talks to the phone over USB | **AutoWarmer** |
+| pymobiledevice3 | starts the helper app on the phone | **AutoWarmer** |
+| An Apple Developer membership | Apple requires the phone's owner to sign the helper app | you (paid tier; free Apple IDs cannot issue API keys) |
+
+Setup asks for an App Store Connect API key (`.p8`) plus its Key ID, Issuer ID
+and Team ID. AutoWarmer keeps a private copy in `~/.autowarmer/keys` (readable
+only by you) and never sends it anywhere.
 
 ## How it works
 
-Python drives real iPhones through a self-signed WebDriverAgent runner (go-ios
-kernel tunnel + pymobiledevice3 = a no-password lane on iOS 26). It opens the
-app, confirms the correct account, then behaves like a human on an incubation
-ramp — every action an independent coin-flip, never a quota. Because the taps are
-real HID touches on a real device, the hardest-to-fake signals (sensors, GPU,
-touch, IP) are authentic; the software only closes the behavioral gap.
+```
+config.json ─▶ incubation ─▶ humanize ─▶ engine ─▶ apps ─▶ device ─▶ iPhone
+ accounts       day → phase   coin-flips  orchestr. open/    go-ios +
+ + interests    ramp          + skewed              verify   pymobiledevice3
+                              dwell times                    + WebDriverAgent
+```
 
-## Why it's different
+Nothing emits a quota. Each like, save or follow is an independent chance;
+watch times are drawn from a right-skewed distribution; sessions land on a
+daily rhythm with a sleep gap. The loop refuses to scroll a screen it has not
+confirmed is a feed, adapts when the feed stops advancing, and stops after
+repeated failures.
 
-The load-bearing insight: platform detection scores the **statistical shape** of
-behavior (skewed, noisy, circadian) — not fixed volume. So this never emits
-quotas: right-skewed watch times, multiplicative delay jitter, scattered taps,
-and a circadian rhythm with a shifting sleep window.
+**Practice mode** (`--no-engage`, or the Practice button) drives everything for
+real but holds every like, follow and save. Use it the first time on any phone.
 
-## Technique overview
+## Command line
 
-Detection isn't beaten by hiding — it's beaten by being statistically
-indistinguishable from a real person on a real phone. The approach stacks three
-layers:
+```bash
+python3 -m autowarmer doctor          # what's installed, what's missing
+python3 -m autowarmer install all     # fetch what can be fetched
+python3 -m autowarmer status          # each account's day, phase and rates
+python3 -m autowarmer warm <handle>   # dry run; --live to drive the phone
+python3 -m autowarmer warm-all        # every connected phone, in turn
+python3 tests/test_autowarmer.py      # the test suite
+```
 
-**1. Real device, real touches.** Everything runs on physical iPhones through a
-self-signed WebDriverAgent/XCUITest runner. Taps are injected as ordinary
-`UITouch` HID events — there is no synthetic-input flag, and the runner's
-identity is invisible across the app sandbox boundary. Authentic sensors, GPU,
-battery, and residential IP are things a data-center emulator can never fake.
+## Scope
 
-**2. Human-shaped behavior, never quotas.** The core finding: platforms score the
-*distribution* of behavior, not its volume. A bot that likes exactly N posts
-every 15 minutes with ±3s jitter is still trivially wrong-shaped. So the driver
-emits no fixed numbers:
-- **Per-item coin-flips** — each like / follow / save / comment is an independent
-  probability draw, so counts vary naturally run to run.
-- **Right-skewed dwell times** — watch durations follow a lognormal curve (many
-  short, a few long), the way real attention actually decays.
-- **Multiplicative delay jitter + scattered taps** — no two gaps or tap points
-  are the same; nothing lands on a fixed pixel.
-- **Circadian scheduling** — ~2 randomized sessions/day inside a daily rhythm with
-  a shifting sleep window; no 3 a.m. activity, no metronomic cadence.
+AutoWarmer warms accounts. It does not post. Automated posting, multi-phone
+fleet operation and managed warmed accounts are commercial products — contact
+**team@earshot.to**.
 
-**3. Ramp + content discipline.** An age-based incubation curve raises engagement
-rates gradually (a week-old account behaves nothing like a month-old one), and the
-session logic always *consumes before it engages* and warms the home feed before
-graduating to keyword search — mirroring how a real user discovers content.
+Use it only on accounts and devices you own, and follow the terms of the
+platforms you use it with.
 
-The result: the easy-to-fake layer (behavior) is shaped to match humans, and the
-hard-to-fake layer (a genuine iPhone) is simply real.
+## Licence
 
-## Features
+[Business Source License 1.1](LICENSE). In short: use it freely for your own
+accounts on your own devices, including commercially. You may not use it to
+provide a service to third parties or to compete with the Licensor. It converts
+to Apache 2.0 on 2030-08-07. For any other arrangement, contact team@earshot.to.
 
-**Lane & Safety**
-- Own WDA/XCUITest runner over a no-password iOS-26 lane; injects real HID touches, no bot flag.
-- Account verified on-screen before any action; one-driver-per-phone locking; native permission prompts auto-denied.
-
-**Human Behavior**
-- Right-skewed watch times, jittered delays, scattered taps, ~2 randomized sessions/day on a circadian schedule.
-- Age-based incubation ramp: consume-before-engage, then keyword-search — like / save / share / follow / comment.
-
-**Reliability**
-- Feed-gated scrolling (never scrolls a non-feed screen) with stuck/drift adaptation and popup escape.
-- Fast wedged-runner detection with cold-relaunch auto-retry for unattended operation.
-
-**Observability**
-- Recorded runs (screenshots + OCR + accessibility trail) with green/red status and a live log.
-- Dashboard: phones × accounts grid tracking keywords, day-since-creation, stage, and run history.
-
----
-
-## Status
-
-Actively developed and running against a live fleet. Public code release is being
-prepared — check back soon.
-
-## License
-
-TBD.
+— built by [Earshot](https://earshot.to)

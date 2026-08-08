@@ -1,0 +1,12 @@
+# your setup and your data — never commit these
+config.json
+state/
+bin/
+vendor/
+.env
+*.p8
+
+__pycache__/
+*.pyc
+.DS_Store
+dist/
