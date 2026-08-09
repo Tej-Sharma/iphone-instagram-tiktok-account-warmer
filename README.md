@@ -78,6 +78,10 @@ fleet operation and managed warmed accounts are commercial products — contact
 Use it only on accounts and devices you own, and follow the terms of the
 platforms you use it with.
 
+## Contributer
+
+If you submit a PR, to honor you we'll link your GitHub profile and project here!
+
 ## Licence
 
 [Business Source License 1.1](LICENSE). In short: use it freely for your own
@@ -85,4 +89,4 @@ accounts on your own devices, including commercially. You may not use it to
 provide a service to third parties or to compete with the Licensor. It converts
 to Apache 2.0 on 2030-08-07. For any other arrangement, contact team@earshot.to.
 
-— built by [Earshot](https://earshot.to)
+— built by Tejas from [Earshot](https://earshot.to)
